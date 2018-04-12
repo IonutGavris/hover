@@ -33,7 +33,7 @@ public class InWindowDragger implements Dragger {
     private static final String TAG = "InWindowDragger";
 
     private final Context mContext;
-    private final WindowViewController mWindowViewController;
+    private final ViewController mViewController;
     private final int mTouchAreaDiameter;
     private final float mTapTouchSlop;
     private View mDragView;
@@ -103,15 +103,15 @@ public class InWindowDragger implements Dragger {
     /**
      * Note: {@code view} must already be added to the {@code Window}.
      * @param context context
-     * @param windowViewController windowViewController
+     * @param viewController windowViewController
      * @param tapTouchSlop tapTouchSlop
      */
     public InWindowDragger(@NonNull Context context,
-                           @NonNull WindowViewController windowViewController,
+                           @NonNull ViewController viewController,
                            int touchAreaDiameter,
                            float tapTouchSlop) {
         mContext = context;
-        mWindowViewController = windowViewController;
+        mViewController = viewController;
         mTouchAreaDiameter = touchAreaDiameter;
         mTapTouchSlop = tapTouchSlop;
     }
@@ -130,7 +130,7 @@ public class InWindowDragger implements Dragger {
     @Override
     public void moveTo(@NonNull Point position) {
         if (mIsActivated) {
-            mWindowViewController.moveViewTo(mDragView,
+            mViewController.moveViewTo(mDragView,
                     position.x - (mTouchAreaDiameter / 2),
                     position.y - (mTouchAreaDiameter / 2));
         }
@@ -155,15 +155,15 @@ public class InWindowDragger implements Dragger {
     private void createTouchControlView(@NonNull final Point dragStartCenterPosition) {
         // TODO: define dimen size
         mDragView = new View(mContext);
-        mWindowViewController.addView(mTouchAreaDiameter, mTouchAreaDiameter, true, mDragView);
-        mWindowViewController.moveViewTo(mDragView, dragStartCenterPosition.x - (mTouchAreaDiameter / 2), dragStartCenterPosition.y - (mTouchAreaDiameter / 2));
+        mViewController.addView(mTouchAreaDiameter, mTouchAreaDiameter, true, mDragView);
+        mViewController.moveViewTo(mDragView, dragStartCenterPosition.x - (mTouchAreaDiameter / 2), dragStartCenterPosition.y - (mTouchAreaDiameter / 2));
         mDragView.setOnTouchListener(mDragTouchListener);
 
         updateTouchControlViewAppearance();
     }
 
     private void destroyTouchControlView() {
-        mWindowViewController.removeView(mDragView);
+        mViewController.removeView(mDragView);
         mDragView = null;
     }
 
@@ -184,7 +184,7 @@ public class InWindowDragger implements Dragger {
     }
 
     private PointF getDragViewCenterPosition() {
-        Point cornerPosition = mWindowViewController.getViewPosition(mDragView);
+        Point cornerPosition = mViewController.getViewPosition(mDragView);
         return convertCornerToCenter(new PointF(
                 cornerPosition.x,
                 cornerPosition.y
@@ -195,7 +195,7 @@ public class InWindowDragger implements Dragger {
         Log.d(TAG, "Center position: " + centerPosition);
         PointF cornerPosition = convertCenterToCorner(centerPosition);
         Log.d(TAG, "Corner position: " + cornerPosition);
-        mWindowViewController.moveViewTo(mDragView, (int) cornerPosition.x, (int) cornerPosition.y);
+        mViewController.moveViewTo(mDragView, (int) cornerPosition.x, (int) cornerPosition.y);
     }
 
     private PointF convertCornerToCenter(@NonNull PointF cornerPosition) {

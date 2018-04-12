@@ -144,7 +144,7 @@ If you want to create your own Hover `Service` from scratch, or if you want to e
 
 ```java
 // Create a HoverView to display in a Window:
-HoverView hoverView = HoverView.createForWindow(
+HoverView hoverView = HoverView.createForViewController(
         context,
         new WindowViewController(
             (WindowManager) getSystemService(Context.WINDOW_SERVICE)

@@ -33,7 +33,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 
 import io.mattcarroll.hover.view.InViewDragger;
 import io.mattcarroll.hover.window.InWindowDragger;
-import io.mattcarroll.hover.window.WindowViewController;
+import io.mattcarroll.hover.window.ViewController;
 
 import static io.mattcarroll.hover.SideDock.SidePosition.LEFT;
 
@@ -54,27 +54,27 @@ public class HoverView extends RelativeLayout {
     private static final String SAVED_STATE_SELECTED_SECTION = "_selected_section";
 
     @NonNull
-    public static HoverView createForWindow(@NonNull Context context,
-                                            @NonNull WindowViewController windowViewController) {
-        return createForWindow(context, windowViewController, null);
+    public static HoverView createForViewController(@NonNull Context context,
+                                            @NonNull ViewController viewController) {
+        return createForViewController(context, viewController, null);
     }
 
     @NonNull
-    public static HoverView createForWindow(@NonNull Context context,
-                                            @NonNull WindowViewController windowViewController,
+    public static HoverView createForViewController(@NonNull Context context,
+                                            @NonNull ViewController viewController,
                                             @Nullable SideDock.SidePosition initialDockPosition) {
-        Dragger dragger = createWindowDragger(context, windowViewController);
-        return new HoverView(context, dragger, windowViewController, initialDockPosition);
+        Dragger dragger = createWindowDragger(context, viewController);
+        return new HoverView(context, dragger, viewController, initialDockPosition);
     }
 
     @NonNull
     private static Dragger createWindowDragger(@NonNull Context context,
-                                               @NonNull WindowViewController windowViewController) {
+                                               @NonNull ViewController viewController) {
         int touchDiameter = context.getResources().getDimensionPixelSize(R.dimen.hover_exit_radius);
         int slop = ViewConfiguration.get(context).getScaledTouchSlop();
         return new InWindowDragger(
                 context,
-                windowViewController,
+                viewController,
                 touchDiameter,
                 slop
         );
@@ -88,7 +88,7 @@ public class HoverView extends RelativeLayout {
     final HoverViewState mClosed = new HoverViewStateClosed();
     final HoverViewState mCollapsed = new HoverViewStateCollapsed();
     final HoverViewState mExpanded = new HoverViewStateExpanded();
-    final WindowViewController mWindowViewController;
+    final ViewController mViewController;
     final Dragger mDragger;
     final Screen mScreen;
     HoverViewState mState;
@@ -107,7 +107,7 @@ public class HoverView extends RelativeLayout {
         super(context, attrs);
         mDragger = createInViewDragger(context);
         mScreen = new Screen(this);
-        mWindowViewController = null;
+        mViewController = null;
 
         init();
 
@@ -129,12 +129,12 @@ public class HoverView extends RelativeLayout {
 
     private HoverView(@NonNull Context context,
                       @NonNull Dragger dragger,
-                      @Nullable WindowViewController windowViewController,
+                      @Nullable ViewController viewController,
                       @Nullable SideDock.SidePosition initialDockPosition) {
         super(context);
         mDragger = dragger;
         mScreen = new Screen(this);
-        mWindowViewController = windowViewController;
+        mViewController = viewController;
 
         init();
 

@@ -15,23 +15,32 @@
  */
 package io.mattcarroll.hover.window;
 
+import android.annotation.SuppressLint;
+import android.content.Context;
 import android.graphics.PixelFormat;
 import android.graphics.Point;
+import android.graphics.Rect;
 import android.os.Build;
 import android.support.annotation.NonNull;
+import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewParent;
 import android.view.WindowManager;
+
+import static android.content.Context.WINDOW_SERVICE;
 
 /**
  * Controls {@code View}s' positions, visibility, etc within a {@code Window}.
  */
-public class WindowViewController implements ViewController {
+public class ViewGroupController implements ViewController {
 
-    private WindowManager mWindowManager;
+    private ViewGroup mViewGroup;
+    private static int sActionBarHeight = -1;
 
-    public WindowViewController(@NonNull WindowManager windowManager) {
-        mWindowManager = windowManager;
+    public ViewGroupController(@NonNull ViewGroup mViewGroup) {
+        this.mViewGroup = mViewGroup;
     }
 
     public void addView(int width, int height, boolean isTouchable, @NonNull View view) {
@@ -54,31 +63,36 @@ public class WindowViewController implements ViewController {
         params.x = 0;
         params.y = 0;
 
-        mWindowManager.addView(view, params);
+	    mViewGroup.addView(view, params);
     }
 
     public void removeView(@NonNull View view) {
         if (null != view.getParent()) {
-            mWindowManager.removeView(view);
+	        mViewGroup.removeView(view);
         }
     }
 
     public Point getViewPosition(@NonNull View view) {
-        WindowManager.LayoutParams params = (WindowManager.LayoutParams) view.getLayoutParams();
-        return new Point(params.x, params.y);
+        Rect rect = new Rect();
+        view.getGlobalVisibleRect(rect);
+
+        int offset = 0;
+        ViewParent parent = view.getParent();
+        if (parent instanceof View) {
+            offset = view.getRootView().getHeight() - ((View) parent).getHeight() - getSoftButtonsBarHeight(view.getContext());
+        }
+        return new Point(rect.left, rect.top - offset);
     }
 
     public void moveViewTo(View view, int x, int y) {
-        WindowManager.LayoutParams params = (WindowManager.LayoutParams) view.getLayoutParams();
-        params.x = x;
-        params.y = y;
-        mWindowManager.updateViewLayout(view, params);
+        view.setX(x);
+        view.setY(y);
     }
 
     public void showView(View view) {
         try {
-            WindowManager.LayoutParams params = (WindowManager.LayoutParams) view.getLayoutParams();
-            mWindowManager.addView(view, params);
+            ViewGroup.LayoutParams params = view.getLayoutParams();
+	        mViewGroup.addView(view, params);
         } catch (IllegalStateException e) {
             // The view is already visible.
         }
@@ -86,22 +100,37 @@ public class WindowViewController implements ViewController {
 
     public void hideView(View view) {
         try {
-            mWindowManager.removeView(view);
+	        mViewGroup.removeView(view);
         } catch (IllegalArgumentException e) {
             // The View wasn't visible to begin with.
         }
     }
 
     public void makeTouchable(View view) {
-        WindowManager.LayoutParams params = (WindowManager.LayoutParams) view.getLayoutParams();
-        params.flags = params.flags & ~WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE & ~WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
-        mWindowManager.updateViewLayout(view, params);
+       //do nothing
     }
 
     public void makeUntouchable(View view) {
-        WindowManager.LayoutParams params = (WindowManager.LayoutParams) view.getLayoutParams();
-        params.flags = params.flags | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
-        mWindowManager.updateViewLayout(view, params);
+        //do nothing
     }
 
+    @SuppressLint("NewApi")
+    private int getSoftButtonsBarHeight(Context context) {
+        // getRealMetrics is only available with API 17 and +
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            WindowManager wm = (WindowManager) context.getSystemService(WINDOW_SERVICE);
+            if (wm != null) {
+                DisplayMetrics metrics = new DisplayMetrics();
+                wm.getDefaultDisplay().getMetrics(metrics);
+                int usableHeight = metrics.heightPixels;
+                wm.getDefaultDisplay().getRealMetrics(metrics);
+                int realHeight = metrics.heightPixels;
+                if (realHeight > usableHeight)
+                    return realHeight - usableHeight;
+                else
+                    return 0;
+            }
+        }
+        return 0;
+    }
 }
